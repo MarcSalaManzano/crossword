@@ -90,7 +90,6 @@ def variableVerticalSetUp(column, crosswordColumn):
             1) variablesInColumn (list of lists): returns a list of lists with the different words in a specific column
             with the following format: [ size, direction (1 = vertical), start position (= row, column) ]
     """
-    # variable = [tamany, direcció (1 = vertical), inici (= row, column)]
     variablesInColumns = []
     cellCounter = 0
     crosswordRow = 0
