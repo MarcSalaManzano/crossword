@@ -1,3 +1,5 @@
+import numpy as np
+
 
 def readCrosswordFile(fileName):
     """
@@ -78,6 +80,7 @@ def variableHorizontalSetUp(line, crosswordRow):
             variablesInRow.append([cellCounter, 0, (crosswordRow, crosswordColumn)])
     return variablesInRow
 
+
 def variableVerticalSetUp(column, crosswordColumn):
     """
         variableVerticalSetUp():
@@ -115,21 +118,24 @@ def variableVerticalSetUp(column, crosswordColumn):
     return variablesInColumns
 
 
+def read_word_dictionary(dict_path: str):
+    """
+    :param dict_path: str, path to word dictionary file
+    :return word_dict: dict of np.array classified by word length
+    """
+    words_dict = {}
+    with open(dict_path, 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            line = line.strip('\n')
+            if len(line) not in words_dict:
+                words_dict[len(line)] = np.array([line])
+            else:
+                words_dict[len(line)] = np.append(words_dict[len(line)], np.array([line]))
+    return words_dict
+
+
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     crosswordVariables = readCrosswordFile("crossword_CB_v2.txt")
-
-    with open('diccionari_CB_v2.txt', 'r') as file:
-        lines = file.readlines()
-        dict = {}
-        for line in lines:
-            if len(line) not in dict:
-                dict[len(line)] = [line.strip('\n')]
-            else:
-                dict[len(line)].append(line.strip('\n'))
-
-        total = 0
-        for key, value in dict.items():
-            print(str(key-1) + ': ' + str(len(value)))
-            total += len(value)
-        print(total)
+    word_dict = read_word_dictionary('diccionari_CB_v2.txt')
