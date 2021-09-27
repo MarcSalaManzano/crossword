@@ -138,7 +138,36 @@ def read_word_dictionary(dict_path: str):
     return words_dict
 
 
+def create_collision_matrix(crossword_variables):
+    """
+    :param crossword_variables: the variables of the crossword with len, orientation, start position
+    :return collisions: np.array of tuples that mark the position of the characters that collide between 2 variables
+    """
+    num_of_vars = crossword_variables.shape[0]
+    collisions = np.empty([num_of_vars,num_of_vars], dtype=object)
+    index = 0
+    for variable in crossword_variables:
+        neighbor_index = index
+        if variable[1] == 0:
+            variable_row = variable[2][0]
+            variable_column = variable[2][1]
+            variable_columns = (variable_column, variable_column+variable[0]-1)
+            for neighbor_variable in crossword_variables[index:]:
+                neighbor_variable_row = neighbor_variable[2][0]
+                neighbor_variable_column = neighbor_variable[2][1]
+                neighbor_variable_rows = (neighbor_variable_row, neighbor_variable_row+neighbor_variable[0]-1)
+                if neighbor_variable[1] == 1 and (is_in_range(neighbor_variable_rows, variable_row) and is_in_range(variable_columns, neighbor_variable_column)):
+                    collisions[index, neighbor_index] = (neighbor_variable_column-variable_column,variable_row-neighbor_variable_row)
+                    collisions[neighbor_index, index] = (variable_row - neighbor_variable_row, neighbor_variable_column - variable_column)
+                neighbor_index += 1
+        index += 1
+    return collisions
+
+def is_in_range(range, number):
+    return (range[0] <= number) and (number <= range[1])
+
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     crossword_variables = read_crossword_file("crossword_CB_v2.txt")
+    create_collision_matrix(crossword_variables)
     word_dict = read_word_dictionary('diccionari_CB_v2.txt')
