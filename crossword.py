@@ -18,7 +18,6 @@ def read_crossword_file(file_name):
         crossword_row = 0
         for line in lines:
             result_variables = variable_horizontal_setup(line, crossword_row, len(variables))
-            # for result in result_variables:
             if result_variables != []:
                 variables.extend(result_variables)
             crossword_row += 1
@@ -30,7 +29,6 @@ def read_crossword_file(file_name):
             column = ''.join(column)
             if column.find('\t') == -1 and column.find('\n') == -1:
                 result_variables = variable_vertical_setup(column, crossword_column, len(variables))
-                #for result in result_variables:
                 if result_variables != []:
                     variables.extend(result_variables)
                 crossword_column += 1
@@ -172,8 +170,39 @@ def create_collision_matrix(crossword_variables):
 def is_in_range(range, number):
     return (range[0] <= number) and (number <= range[1])
 
+def variable_degree_heuristic(not_assigned_variables, collision_matrix):
+    '''
+    variable_degree_heuristic():
+        1) selects the unassigned variable involved in a greater number of constraints
+    Parameters:
+        1) not_assigned_variables (numpy array): contains the information related to unassigned variables
+        2) collision_matrix (numpy array): contains the contraints relations between variables
+    Returns:
+        1) selected_variable (int): number of the selected variable that has the greatest number of constraints
+    '''
+    selected_variable = None
+    selected_variable_constraints = -1
+    if collision_matrix.size != 0:
+        for variable in not_assigned_variables:
+            constraints_number = 0
+            if variable[1] == 0:
+                for collision_value in collision_matrix[variable[3]-1]:
+                    if collision_value != None:
+                        constraints_number += 1
+            else:
+                for collision_value in collision_matrix[variable[3]-1]:
+                    if collision_value != None:
+                        constraints_number += 1
+            if selected_variable_constraints < constraints_number:
+                selected_variable = variable[3]
+                selected_variable_constraints = constraints_number
+            print("Variable numero: " + str(variable[3]) + " - restriccions: " + str(constraints_number))
+    print("Variable seleccionada: " + str(selected_variable) + " amb un total de " + str(selected_variable_constraints) + " restriccions")
+    return selected_variable
+
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     crossword_variables = read_crossword_file("crossword_CB_v2.txt")
-    create_collision_matrix(crossword_variables)
+    collision_matrix = create_collision_matrix(crossword_variables)
     word_dict = read_word_dictionary('diccionari_CB_v2.txt')
+    variable_to_assign = variable_degree_heuristic(crossword_variables, collision_matrix)
