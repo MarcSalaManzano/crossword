@@ -17,10 +17,10 @@ def read_crossword_file(file_name):
         # get horizontal words in crossword (= read file by rows):
         crossword_row = 0
         for line in lines:
-            result_variables = variable_horizontal_setup(line, crossword_row)
-            for result in result_variables:
-                if result != []:
-                    variables.extend(result_variables)
+            result_variables = variable_horizontal_setup(line, crossword_row, len(variables))
+            # for result in result_variables:
+            if result_variables != []:
+                variables.extend(result_variables)
             crossword_row += 1
 
         # get vertical words in crossword (= read file by columns):
@@ -29,10 +29,10 @@ def read_crossword_file(file_name):
         for column in columns:
             column = ''.join(column)
             if column.find('\t') == -1 and column.find('\n') == -1:
-                result_variables = variable_vertical_setup(column, crossword_column)
-                for result in result_variables:
-                    if result != []:
-                        variables.extend(result_variables)
+                result_variables = variable_vertical_setup(column, crossword_column, len(variables))
+                #for result in result_variables:
+                if result_variables != []:
+                    variables.extend(result_variables)
                 crossword_column += 1
     file.close()
 
@@ -44,7 +44,7 @@ def read_crossword_file(file_name):
     return variables
 
 
-def variable_horizontal_setup(line, crossword_row):
+def variable_horizontal_setup(line, crossword_row, num_variables):
     """
         variable_horizontal_setup():
             1) finds the horizontal words in the crossword
@@ -52,27 +52,30 @@ def variable_horizontal_setup(line, crossword_row):
         Parameters:
             1) line (string): contains the values presents in a row
             2) crossword_row (int): refers to the row's number to evaluate from the crossword
+            3) num_variables (int): number of variables already detected in the crossword
         Returns:
             1) variables_in_row (list of lists): returns a list of lists with the different words in a specific row
-            with the following format: [ size, direction (0 = horizontal), start position (= row, column) ]
+            with the following format: [ size, direction (0 = horizontal), start position (= row, column), variable number ]
     """
     variables_in_row = []
     cell_counter = 0
     crossword_column = 0
     actual_column = 0
+    variable_number = num_variables + 1
 
     line = line.replace("\t", "")
     line = line.replace("\n", "")
 
     if line.find("#") == -1:
         # not black cells
-        variables_in_row.append([len(line), 0, (crossword_row, crossword_column)])
+        variables_in_row.append([len(line), 0, (crossword_row, crossword_column), variable_number])
     else:
         for cell in line:
             if cell != '#':
                 cell_counter += 1
             elif cell_counter > 1:
-                variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column)])
+                variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column), variable_number])
+                variable_number += 1
                 cell_counter = 0
                 crossword_column = actual_column
             else:
@@ -80,11 +83,11 @@ def variable_horizontal_setup(line, crossword_row):
                 crossword_column = actual_column + 1
             actual_column += 1
         if cell_counter > 1:
-            variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column)])
+            variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column), variable_number])
     return variables_in_row
 
 
-def variable_vertical_setup(column, crossword_column):
+def variable_vertical_setup(column, crossword_column, num_variables):
     """
         variable_vertical_setup():
             1) finds the vertical words in the crossword
@@ -92,24 +95,27 @@ def variable_vertical_setup(column, crossword_column):
         Parameters:
             1) column (string): contains the values presents in a column
             2) crossword_column (int): refers to the column's number to evaluate from the crossword
+            3) num_variables (int): number of variables already detected in the crossword
         Returns:
             1) variables_in_column (list of lists): returns a list of lists with the different words in a specific column
-            with the following format: [ size, direction (1 = vertical), start position (= row, column) ]
+            with the following format: [ size, direction (1 = vertical), start position (= row, column), variable number ]
     """
     variables_in_columns = []
     cell_counter = 0
     crossword_row = 0
     actual_row = 0
+    variable_number = num_variables + 1
 
     if column.find("#") == -1:
         # not black cells
-        variables_in_columns.append([len(column), 1, (crossword_row, crossword_column)])
+        variables_in_columns.append([len(column), 1, (crossword_row, crossword_column), variable_number])
     else:
         for cell in column:
             if cell != '#':
                 cell_counter += 1
             elif cell_counter > 1:
-                variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column)])
+                variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
+                variable_number += 1
                 cell_counter = 0
                 crossword_row = actual_row
             else:
@@ -117,7 +123,7 @@ def variable_vertical_setup(column, crossword_column):
                 crossword_row = actual_row + 1
             actual_row += 1
         if cell_counter > 1:
-            variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column)])
+            variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
     return variables_in_columns
 
 
