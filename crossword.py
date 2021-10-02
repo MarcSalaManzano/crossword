@@ -1,5 +1,6 @@
 import numpy as np
 import time
+import collections
 
 def read_crossword_file(file_name):
     """
@@ -10,6 +11,7 @@ def read_crossword_file(file_name):
     Returns:
         1) variables (list of lists): contains the words to be filled
     """
+    ordered_dict = collections.OrderedDict()
     with open(file_name) as file:
         lines = file.readlines()
         variables = []
@@ -17,7 +19,7 @@ def read_crossword_file(file_name):
         # get horizontal words in crossword (= read file by rows):
         crossword_row = 0
         for line in lines:
-            result_variables = variable_horizontal_setup(line, crossword_row, len(variables))
+            result_variables = variable_horizontal_setup(line, crossword_row, len(variables), ordered_dict)
             if result_variables:
                 variables.extend(result_variables)
             crossword_row += 1
@@ -28,21 +30,21 @@ def read_crossword_file(file_name):
         for column in columns:
             column = ''.join(column)
             if column.find('\t') == -1 and column.find('\n') == -1:
-                result_variables = variable_vertical_setup(column, crossword_column, len(variables))
+                result_variables = variable_vertical_setup(column, crossword_column, len(variables), ordered_dict)
                 if result_variables:
                     variables.extend(result_variables)
                 crossword_column += 1
     file.close()
 
     # convert variables to numpy array
-    variables = np.array(variables, dtype=object)
+    variables = np.array(variables, dtype=int)
 
     print("Variables: " + str(variables))
+    print(ordered_dict[0])
+    return variables, ordered_dict
 
-    return variables
 
-
-def variable_horizontal_setup(line, crossword_row, num_variables):
+def variable_horizontal_setup(line, crossword_row, num_variables, ordered_dict):
     """
         variable_horizontal_setup():
             1) finds the horizontal words in the crossword
@@ -66,13 +68,17 @@ def variable_horizontal_setup(line, crossword_row, num_variables):
 
     if line.find("#") == -1:
         # not black cells
-        variables_in_row.append([len(line), 0, (crossword_row, crossword_column), variable_number])
+        ordered_dict[variable_number - 1] = [len(line), 0, (crossword_row, crossword_column)]
+        #variables_in_row.append([len(line), 0, (crossword_row, crossword_column), variable_number])
+        variables_in_row.append(variable_number - 1)
     else:
         for cell in line:
             if cell != '#':
                 cell_counter += 1
             elif cell_counter > 1:
-                variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column), variable_number])
+                ordered_dict[variable_number-1] = [cell_counter, 0, (crossword_row, crossword_column)]
+                #variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column), variable_number])
+                variables_in_row.append(variable_number - 1)
                 variable_number += 1
                 cell_counter = 0
                 crossword_column = actual_column
@@ -81,11 +87,13 @@ def variable_horizontal_setup(line, crossword_row, num_variables):
                 crossword_column = actual_column + 1
             actual_column += 1
         if cell_counter > 1:
-            variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column), variable_number])
+            ordered_dict[variable_number - 1] = [cell_counter, 0, (crossword_row, crossword_column)]
+            variables_in_row.append(variable_number - 1)
+            #variables_in_row.append([cell_counter, 0, (crossword_row, crossword_column), variable_number])
     return variables_in_row
 
 
-def variable_vertical_setup(column, crossword_column, num_variables):
+def variable_vertical_setup(column, crossword_column, num_variables, ordered_dict):
     """
         variable_vertical_setup():
             1) finds the vertical words in the crossword
@@ -106,13 +114,17 @@ def variable_vertical_setup(column, crossword_column, num_variables):
 
     if column.find("#") == -1:
         # not black cells
-        variables_in_columns.append([len(column), 1, (crossword_row, crossword_column), variable_number])
+        #variables_in_columns.append([len(column), 1, (crossword_row, crossword_column), variable_number])
+        ordered_dict[variable_number-1] = [len(column), 1, (crossword_row, crossword_column)]
+        variables_in_columns.append(variable_number-1)
     else:
         for cell in column:
             if cell != '#':
                 cell_counter += 1
             elif cell_counter > 1:
-                variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
+                #variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
+                ordered_dict[variable_number-1] = [len(column), 1, (crossword_row, crossword_column)]
+                variables_in_columns.append(variable_number - 1)
                 variable_number += 1
                 cell_counter = 0
                 crossword_row = actual_row
@@ -121,7 +133,9 @@ def variable_vertical_setup(column, crossword_column, num_variables):
                 crossword_row = actual_row + 1
             actual_row += 1
         if cell_counter > 1:
-            variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
+            #variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
+            ordered_dict[variable_number-1] = [len(column), 1, (crossword_row, crossword_column)]
+            variables_in_columns.append(variable_number - 1)
     return variables_in_columns
 
 
@@ -142,7 +156,7 @@ def read_word_dictionary(dict_path: str):
     return words_dict
 
 
-def create_collision_matrix(crossword_variables):
+def create_collision_matrix(crossword_variables, ordered_dict):
     """
     :param crossword_variables: the variables of the crossword with len, orientation, start position
     :return collisions: np.array of tuples that mark the position of the characters that collide between 2 variables
@@ -150,13 +164,14 @@ def create_collision_matrix(crossword_variables):
     num_of_vars = crossword_variables.shape[0]
     collisions = np.empty([num_of_vars, num_of_vars], dtype=object)
     index = 0
-    for variable in crossword_variables:
+    for key, variable in ordered_dict.items():
         neighbor_index = index
         if variable[1] == 0:
             variable_row = variable[2][0]
             variable_column = variable[2][1]
             variable_columns = (variable_column, variable_column + variable[0] - 1)
-            for neighbor_variable in crossword_variables[index:]:
+            crossword_variables_aux = [ordered_dict.get(key) for key in range(index, num_of_vars)]
+            for neighbor_variable in crossword_variables_aux:
                 neighbor_variable_row = neighbor_variable[2][0]
                 neighbor_variable_column = neighbor_variable[2][1]
                 neighbor_variable_rows = (neighbor_variable_row, neighbor_variable_row + neighbor_variable[0] - 1)
@@ -229,8 +244,11 @@ def backtracking(assigned, non_assigned, restrictions, domain):
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     time0 = time.time()
-    crossword_variables = read_crossword_file("crossword_CB_v2.txt")
-    collision_matrix = create_collision_matrix(crossword_variables)
+    crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
+    collision_matrix = create_collision_matrix(crossword_variables, ordered_dict)
+    print(ordered_dict)
+    print(crossword_variables)
+    print(collision_matrix)
     word_dict = read_word_dictionary('diccionari_CB_v2.txt')
     time1 = time.time()
     print("tiempo setup" + str(time1-time0))
