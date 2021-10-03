@@ -4,12 +4,13 @@ import collections
 
 def read_crossword_file(file_name):
     """
-    readCrosswordFile():
+    read_crossword_file():
         1) reads the crossword present in a .txt file
     Parameters:
         1) file_name (string): name of the .txt file that contains the crossword
     Returns:
         1) variables (list of lists): contains the words to be filled
+        2) ordered_dict (dictionay): contains the information related to all of the variables in crossword
     """
     ordered_dict = collections.OrderedDict()
     with open(file_name) as file:
@@ -39,8 +40,6 @@ def read_crossword_file(file_name):
     # convert variables to numpy array
     variables = np.array(variables, dtype=int)
 
-    print("Variables: " + str(variables))
-    print(ordered_dict[0])
     return variables, ordered_dict
 
 
@@ -53,9 +52,10 @@ def variable_horizontal_setup(line, crossword_row, num_variables, ordered_dict):
             1) line (string): contains the values presents in a row
             2) crossword_row (int): refers to the row's number to evaluate from the crossword
             3) num_variables (int): number of variables already detected in the crossword
+            4) ordered_dict (dict): dictionary that contains the information related to the variable in the following
+               format: [ size, direction (0 = horizontal), start position (= row, column) ]
         Returns:
-            1) variables_in_row (list of lists): returns a list of lists with the different words in a specific row
-            with the following format: [ size, direction (0 = horizontal), start position (= row, column), variable number ]
+            1) variables_in_row (list): return a list with the number of variables that appear in a specific row
     """
     variables_in_row = []
     cell_counter = 0
@@ -102,9 +102,10 @@ def variable_vertical_setup(column, crossword_column, num_variables, ordered_dic
             1) column (string): contains the values presents in a column
             2) crossword_column (int): refers to the column's number to evaluate from the crossword
             3) num_variables (int): number of variables already detected in the crossword
+            4) ordered_dict (dict): dictionary that contains the information related to the variable in the following
+               format: [ size, direction (1 = vertical), start position (= row, column) ]
         Returns:
-            1) variables_in_column (list of lists): returns a list of lists with the different words in a specific column
-            with the following format: [ size, direction (1 = vertical), start position (= row, column), variable number ]
+            1) variables_in_column (list): returns a list with the number of variables that appear in a specific column
     """
     variables_in_columns = []
     cell_counter = 0
@@ -194,13 +195,29 @@ def is_in_range(range, number):
 def variable_degree_heuristic(not_assigned_variables, collision_matrix):
     """
     variable_degree_heuristic():
-        1) selects the unassigned variable involved in a greater number of constraints
+        1) returns all the unassigned variables sorted by the greater number of constraints
     Parameters:
-        1) not_assigned_variables (numpy array): contains the information related to unassigned variables
+        1) not_assigned_variables (numpy array): contains the number of non assigned variables
         2) collision_matrix (numpy array): contains the contraints relations between variables
     Returns:
-        1) selected_variable (int): number of the selected variable that has the greatest number of constraints
+        1) sorted_not_assigned_variables (list of list): contains the variables sorted by the greater number of
+           constraints in which they are involved
     """
+    print("Not assigned variables " + str(not_assigned_variables))
+    constraints_dict = {}
+    sorted_not_assigned_variables = []
+    for num_variable in not_assigned_variables:
+        constraints_number = 0
+        for collision_value in collision_matrix[num_variable]:
+            if collision_value is not None:
+                constraints_number += 1
+        constraints_dict[num_variable] = constraints_number
+        print("Variable num " + str(num_variable) + " té " + str(constraints_number) + " restriccions")
+    sorted_dict = collections.OrderedDict(sorted(constraints_dict.items(), key=lambda x: x[1], reverse=True))
+    sorted_not_assigned_variables.extend(sorted_dict.keys())
+    print("Sorted list of not assigned variables: " + str(sorted_not_assigned_variables))
+    return sorted_not_assigned_variables
+    ''' 
     selected_variable = None
     selected_variable_constraints = -1
     if collision_matrix.size != 0:
@@ -218,6 +235,7 @@ def variable_degree_heuristic(not_assigned_variables, collision_matrix):
                 selected_variable = variable
                 selected_variable_constraints = constraints_number
     return selected_variable
+    '''
 
 
 def check_restrictions():
@@ -246,12 +264,15 @@ if __name__ == '__main__':
     time0 = time.time()
     crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
     collision_matrix = create_collision_matrix(crossword_variables, ordered_dict)
-    print(ordered_dict)
-    print(crossword_variables)
-    print(collision_matrix)
+    print("Diccionari Variables: " + str(ordered_dict))
+    print("Llista de variables: " + str(crossword_variables))
+    print("Matriu col·lisió: " + str(collision_matrix))
     word_dict = read_word_dictionary('diccionari_CB_v2.txt')
     time1 = time.time()
     print("tiempo setup" + str(time1-time0))
-    backtracking(np.array([]), crossword_variables, collision_matrix, word_dict)
+
+    # backtracking(np.array([]), crossword_variables, collision_matrix, word_dict)
+    sorted_variables = variable_degree_heuristic(crossword_variables, collision_matrix)
+
     time2 = time.time()
     print("tiempo bt" + str(time2-time1))
