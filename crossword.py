@@ -238,7 +238,22 @@ def variable_degree_heuristic(not_assigned_variables, collision_matrix):
     '''
 
 
-def check_restrictions():
+def check_restrictions(assigned, actual_variable, restrictions, new_value):
+    """
+    :param assigned: assigned variables in a numpy array
+    :param actual_variable: numeric value of the variable
+    :param restrictions: the collision array
+    :param new_value: the new value for the variable
+    :return boolean: True if there are no conflicts and False for conflicts
+    """
+    neighbours = np.where(restrictions[actual_variable] != None)
+    mask = np.isin(assigned[:,1], neighbours)
+    for neighbour_assigned in assigned[mask]:
+        neighbour_assigned_position = neighbour_assigned[1]
+        neighbour_assigned_value = neighbour_assigned[0]
+        collision = restrictions[actual_variable,neighbour_assigned_position]
+        if new_value[collision[0]] != neighbour_assigned_value[collision[1]]:
+            return False
     return True
 
 
@@ -274,5 +289,6 @@ if __name__ == '__main__':
     # backtracking(np.array([]), crossword_variables, collision_matrix, word_dict)
     sorted_variables = variable_degree_heuristic(crossword_variables, collision_matrix)
 
+    #check_restrictions(np.array([('patata',1), ('albaricoque',3), ('jesu',5)], dtype=object), 2, collision_matrix, 'patata')
     time2 = time.time()
     print("tiempo bt" + str(time2-time1))
