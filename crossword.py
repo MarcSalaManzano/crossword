@@ -124,7 +124,7 @@ def variable_vertical_setup(column, crossword_column, num_variables, ordered_dic
                 cell_counter += 1
             elif cell_counter > 1:
                 #variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
-                ordered_dict[variable_number-1] = [len(column), 1, (crossword_row, crossword_column)]
+                ordered_dict[variable_number-1] = [cell_counter, 1, (crossword_row, crossword_column)]
                 variables_in_columns.append(variable_number - 1)
                 variable_number += 1
                 cell_counter = 0
@@ -135,7 +135,7 @@ def variable_vertical_setup(column, crossword_column, num_variables, ordered_dic
             actual_row += 1
         if cell_counter > 1:
             #variables_in_columns.append([cell_counter, 1, (crossword_row, crossword_column), variable_number])
-            ordered_dict[variable_number-1] = [len(column), 1, (crossword_row, crossword_column)]
+            ordered_dict[variable_number-1] = [cell_counter, 1, (crossword_row, crossword_column)]
             variables_in_columns.append(variable_number - 1)
     return variables_in_columns
 
@@ -291,6 +291,6 @@ if __name__ == '__main__':
     # backtracking(np.array([]), crossword_variables, collision_matrix, word_dict)
     sorted_variables = variable_degree_heuristic(crossword_variables, collision_matrix)
 
-    #check_restrictions(np.array([('patata',1), ('albaricoque',3), ('jesu',5)], dtype=object), 2, collision_matrix, 'patata')
+    check_restrictions(np.array([('fatata',4)], dtype=object), 2, collision_matrix, 'patata')
     time2 = time.time()
     print("tiempo bt" + str(time2-time1))
