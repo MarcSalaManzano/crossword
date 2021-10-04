@@ -246,6 +246,8 @@ def check_restrictions(assigned, actual_variable, restrictions, new_value):
     :param new_value: the new value for the variable
     :return boolean: True if there are no conflicts and False for conflicts
     """
+    if assigned.size == 0:
+        return True
     neighbours = np.where(restrictions[actual_variable] != None)
     mask = np.isin(assigned[:,1], neighbours)
     for neighbour_assigned in assigned[mask]:
