@@ -40,7 +40,7 @@ def read_crossword_file(file_name):
     # convert variables to numpy array
     variables = np.array(variables, dtype=int)
 
-    return variables, ordered_dict
+    return crossword_row,crossword_column, variables, ordered_dict
 
 
 def variable_horizontal_setup(line, crossword_row, num_variables, ordered_dict):
@@ -280,14 +280,26 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
 
             if res is not None:
                 return res
-
     return None
 
+def print_board(results, variables, crossword_row, crossword_column):
+    board = np.full((crossword_row, crossword_column),'#')
+    for result in results:
+        starting_point = list(variables[result[1]][2])
+        orientation = 2
+        if variables[result[1]][1] == 0:
+            orientation = 1
+        else:
+            orientation = 0
+        for character in (result[0]):
+            board[starting_point[0], starting_point[1]] = character
+            starting_point[orientation] += 1
+    print(str(board).replace('\'', '').replace('[', '').replace(']', '').replace(' ','').replace(',',''))
 
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     time0 = time.time()
-    crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
+    crossword_row, crossword_column, crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
     collision_matrix = create_collision_matrix(crossword_variables, ordered_dict)
     print("Diccionari Variables: " + str(ordered_dict))
     print("Llista de variables: " + str(crossword_variables))
@@ -297,8 +309,8 @@ if __name__ == '__main__':
     print("tiempo setup " + str(time1-time0))
 
     variables = variable_degree_heuristic(crossword_variables, collision_matrix)
-    print(backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), variables, collision_matrix, word_dict, ordered_dict))
-
-    #check_restrictions(np.array([('fatata',4)], dtype=object), 2, collision_matrix, 'patata')
+    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), variables, collision_matrix, word_dict, ordered_dict)
     time2 = time.time()
     print("tiempo bt " + str(time2-time1))
+
+    print_board(results, ordered_dict, crossword_row, crossword_column)
