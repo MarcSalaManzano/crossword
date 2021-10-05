@@ -264,16 +264,18 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
         return assigned
 
     variable_to_assign = non_assigned[0]
+    size = variable_dict[variable_to_assign][0]
 
-    for domain_value in domain[variable_dict[variable_to_assign][0]]:
+    for domain_value in domain[size]:
 
         if check_restrictions(assigned, variable_to_assign, restrictions, domain_value):
 
             assigned[variable_to_assign] = np.array([domain_value, variable_to_assign], dtype=object)
 
             new_non_assigned = np.delete(non_assigned, 0, axis=0)
-            new_domain = domain  # TODO: esto es full pepega en memoria me parece
-            new_domain[variable_dict[variable_to_assign][0]] = np.delete(new_domain[variable_dict[variable_to_assign][0]], np.where(domain[variable_dict[variable_to_assign][0]] == domain_value))
+            new_domain = domain.copy()  # TODO: esto es full pepega en memoria me parece
+            new_domain[size] = np.delete(new_domain[size], np.where(domain[size] == domain_value))
+
             res = backtracking(assigned, new_non_assigned, restrictions, new_domain, ordered_dict)
 
             if res is not None:
