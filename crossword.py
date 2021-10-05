@@ -246,7 +246,7 @@ def check_restrictions(assigned, actual_variable, restrictions, new_value):
     :param new_value: the new value for the variable
     :return boolean: True if there are no conflicts and False for conflicts
     """
-    if assigned.size == 0:
+    if assigned.size <= 1:
         return True
     neighbours = np.where(restrictions[actual_variable] != None)
     mask = np.isin(assigned[:,1], neighbours)
@@ -259,20 +259,28 @@ def check_restrictions(assigned, actual_variable, restrictions, new_value):
     return True
 
 
-def backtracking(assigned, non_assigned, restrictions, domain):
+def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
     if non_assigned.size == 0:
         return assigned
 
-    variable_to_assign = variable_degree_heuristic(non_assigned, restrictions)
-    for domain_value in domain[variable_to_assign[0]]:  # 0 is the position of the size in the array
-        if check_restrictions():  # TODO: actualizar esto con lo que necesite las restricciones
-            new_assigned = np.append(assigned, [non_assigned[0], domain_value])  # Add to the assigned list the variable and their value
-            new_non_assigned = np.delete(non_assigned, 0, axis=0)
-            new_domain = domain
-            new_domain[variable_to_assign[0]] = np.delete(new_domain[variable_to_assign[0]], np.where(domain[variable_to_assign[0]] == domain_value))
-            res = backtracking(new_assigned, new_non_assigned, restrictions, new_domain)
+    variable_to_assign = variable_degree_heuristic(non_assigned, restrictions)[0]
+
+    for domain_value in np.nditer(domain[variable_dict[variable_to_assign][0]]):
+
+        if check_restrictions(assigned, variable_to_assign, restrictions, domain_value):
+
+            new_assigned = np.append(assigned, np.array([(domain_value, variable_to_assign)]), axis=0)  # Add to the assigned list the variable and their value
+            if None in new_assigned[0]:
+                new_assigned = np.delete(new_assigned, 0, axis=0)
+
+            new_non_assigned = np.delete(non_assigned, np.where(non_assigned == variable_to_assign), axis=0)
+            new_domain = domain  # TODO: esto es full pepega en memoria me parece
+            new_domain[variable_dict[variable_to_assign][0]] = np.delete(new_domain[variable_dict[variable_to_assign][0]], np.where(domain[variable_dict[variable_to_assign][0]] == domain_value))
+            res = backtracking(new_assigned, new_non_assigned, restrictions, new_domain, ordered_dict)
+
             if res is not None:
                 return res
+
     return None
 
 
@@ -286,11 +294,10 @@ if __name__ == '__main__':
     print("Matriu col·lisió: " + str(collision_matrix))
     word_dict = read_word_dictionary('diccionari_CB_v2.txt')
     time1 = time.time()
-    print("tiempo setup" + str(time1-time0))
+    print("tiempo setup " + str(time1-time0))
 
-    # backtracking(np.array([]), crossword_variables, collision_matrix, word_dict)
-    sorted_variables = variable_degree_heuristic(crossword_variables, collision_matrix)
+    print(backtracking(np.array([], dtype=object), crossword_variables, collision_matrix, word_dict, ordered_dict))
 
-    check_restrictions(np.array([('fatata',4)], dtype=object), 2, collision_matrix, 'patata')
+    #check_restrictions(np.array([('fatata',4)], dtype=object), 2, collision_matrix, 'patata')
     time2 = time.time()
-    print("tiempo bt" + str(time2-time1))
+    print("tiempo bt " + str(time2-time1))
