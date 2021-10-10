@@ -148,16 +148,14 @@ def read_word_dictionary(dict_path: str):
     """
     words = np.loadtxt(dict_path, dtype=str)
 
-    """Esto esta de prueba, de momento es purria"""
-    mylen = np.vectorize(len)
-    lengths = mylen(words)
-    print(words[lengths == 5])
-    algo = np.empty([16], dtype=object)
-    print(algo)
+    my_len = np.vectorize(len)
+    lengths = my_len(words)
+    domains = np.empty([max(lengths)], dtype=object)
+
     for i in range(max(lengths)):
-        algo[i] = words[lengths == i]
-    print(algo)
-    return algo
+        domains[i] = words[lengths == i]
+
+    return domains
 
 
 def create_collision_matrix(crossword_variables, ordered_dict):
@@ -220,25 +218,6 @@ def variable_degree_heuristic(not_assigned_variables, collision_matrix):
     sorted_not_assigned_variables.extend(sorted_dict.keys())
     print("Sorted list of not assigned variables: " + str(sorted_not_assigned_variables))
     return sorted_not_assigned_variables
-    ''' 
-    selected_variable = None
-    selected_variable_constraints = -1
-    if collision_matrix.size != 0:
-        for variable in not_assigned_variables:
-            constraints_number = 0
-            if variable[1] == 0:
-                for collision_value in collision_matrix[variable[3] - 1]:
-                    if collision_value is not None:
-                        constraints_number += 1
-            else:
-                for collision_value in collision_matrix[variable[3] - 1]:
-                    if collision_value is not None:
-                        constraints_number += 1
-            if selected_variable_constraints < constraints_number:
-                selected_variable = variable
-                selected_variable_constraints = constraints_number
-    return selected_variable
-    '''
 
 
 def check_restrictions(assigned, actual_variable, restrictions, new_value):
@@ -262,28 +241,32 @@ def check_restrictions(assigned, actual_variable, restrictions, new_value):
     return True
 
 
+def la_funcion(collision_matrix, domain):
+    return domain
+
+
 def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
     if len(non_assigned) == 0:
         return assigned
 
     variable_to_assign = non_assigned[0]
-    size = variable_dict[variable_to_assign][0]
 
-    for domain_value in domain[size]:
+    for domain_value in domain[variable_to_assign]:
 
         if check_restrictions(assigned, variable_to_assign, restrictions, domain_value):
 
             assigned[variable_to_assign] = np.array([domain_value, variable_to_assign], dtype=object)
 
             new_non_assigned = np.delete(non_assigned, 0, axis=0)
-            new_domain = domain.copy()  # TODO: esto es full pepega en memoria me parece
-            new_domain[size] = np.delete(new_domain[size], np.where(domain[size] == domain_value))
 
+            new_domain = la_funcion(collision_matrix, domain)  # hay que tirar patras si no hay dominio aqui dentro tb
             res = backtracking(assigned, new_non_assigned, restrictions, new_domain, ordered_dict)
 
             if res is not None:
                 return res
+
     return None
+
 
 def print_board(results, variables, crossword_row, crossword_column):
     board = np.full((crossword_row, crossword_column),'#')
@@ -299,6 +282,16 @@ def print_board(results, variables, crossword_row, crossword_column):
             starting_point[orientation] += 1
     print(str(board).replace('\'', '').replace('[', '').replace(']', '').replace(' ','').replace(',',''))
 
+
+def generate_individual_domains(variables, domain, variable_info):
+    variable_domains = np.empty([16], dtype=object)
+
+    for i in variables:
+        variable_domains[i] = domain[variable_info[i][0]]
+    print(variable_domains)
+    return variable_domains
+
+
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     time0 = time.time()
@@ -308,11 +301,13 @@ if __name__ == '__main__':
     print("Llista de variables: " + str(crossword_variables))
     print("Matriu col·lisió: " + str(collision_matrix))
     word_dict = read_word_dictionary('diccionari_CB_v2.txt')
+    variable_domains = generate_individual_domains(crossword_variables, word_dict, ordered_dict)
+
     time1 = time.time()
     print("tiempo setup " + str(time1-time0))
 
     variables = variable_degree_heuristic(crossword_variables, collision_matrix)
-    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), variables, collision_matrix, word_dict, ordered_dict)
+    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), variables, collision_matrix, variable_domains, ordered_dict)
     time2 = time.time()
     print("tiempo bt " + str(time2-time1))
 
