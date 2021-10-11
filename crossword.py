@@ -264,7 +264,7 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
 
             if res is not None:
                 return res
-
+    assigned[variable_to_assign] = np.empty(2, dtype=object) # Pa eliminar las variables que no van (sino hay conflictos)
     return None
 
 
@@ -284,7 +284,7 @@ def print_board(results, variables, crossword_row, crossword_column):
 
 
 def generate_individual_domains(variables, domain, variable_info):
-    variable_domains = np.empty([16], dtype=object)
+    variable_domains = np.empty([variables.shape[0]], dtype=object)
 
     for i in variables:
         variable_domains[i] = domain[variable_info[i][0]]
