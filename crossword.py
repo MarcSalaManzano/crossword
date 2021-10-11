@@ -241,8 +241,19 @@ def check_restrictions(assigned, actual_variable, restrictions, new_value):
     return True
 
 
-def la_funcion(collision_matrix, domain):
-    return domain
+def update_domains(restrictions, domain, actual_variable, domain_value, non_assigned):
+    new_domain = np.copy(domain)
+    neighbours = np.where(restrictions[actual_variable] != None)
+    mask = np.isin(non_assigned[:], neighbours)
+    for neighbour_non_assigned in non_assigned[mask]:
+        collision = restrictions[actual_variable, neighbour_non_assigned]
+        time0 = time.time()
+        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], collision[1], collision[1] + 1 ) == collision[1]]
+        time1 = time.time()
+        print("tiempo new dom " + str(time1 - time0))
+        if new_domain[neighbour_non_assigned].size == 0:
+            return domain, True
+    return new_domain, False
 
 
 def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
@@ -259,11 +270,12 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
 
             new_non_assigned = np.delete(non_assigned, 0, axis=0)
 
-            new_domain = la_funcion(collision_matrix, domain)  # hay que tirar patras si no hay dominio aqui dentro tb
-            res = backtracking(assigned, new_non_assigned, restrictions, new_domain, ordered_dict)
+            new_domain, empty_domain = update_domains(collision_matrix, domain, variable_to_assign, domain_value, non_assigned)
+            if not empty_domain:
+                res = backtracking(assigned, new_non_assigned, restrictions, new_domain, ordered_dict)
+                if res is not None:
+                    return res
 
-            if res is not None:
-                return res
     assigned[variable_to_assign] = np.empty(2, dtype=object) # Pa eliminar las variables que no van (sino hay conflictos)
     return None
 
@@ -307,7 +319,7 @@ if __name__ == '__main__':
     print("tiempo setup " + str(time1-time0))
 
     variables = variable_degree_heuristic(crossword_variables, collision_matrix)
-    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), variables, collision_matrix, variable_domains, ordered_dict)
+    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), np.array(variables), collision_matrix, variable_domains, ordered_dict)
     time2 = time.time()
     print("tiempo bt " + str(time2-time1))
 
