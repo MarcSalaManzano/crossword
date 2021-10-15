@@ -255,22 +255,12 @@ def update_domains(restrictions, domain, actual_variable, domain_value, non_assi
             return domain, True
     return new_domain, False
 
-def minimum_remaining_values(domain, non_assigned):
-    domain_length = []
-    for i in range(len(non_assigned)):
-        domain_length.append(np.count_nonzero(domain[i]))
-    index_domain = domain_length.index(min(domain_length))
-    return index_domain
-
 
 def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
     if len(non_assigned) == 0:
         return assigned
 
-    index_min = minimum_remaining_values(domain, non_assigned)
-    variable_to_assign = non_assigned[index_min]
-
-
+    variable_to_assign = non_assigned[0]
 
     for domain_value in domain[variable_to_assign]:
 
@@ -278,7 +268,7 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
 
             assigned[variable_to_assign] = np.array([domain_value, variable_to_assign], dtype=object)
 
-            new_non_assigned = np.delete(non_assigned, index_min, axis=0)
+            new_non_assigned = np.delete(non_assigned, 0, axis=0)
 
             new_domain, empty_domain = update_domains(collision_matrix, domain, variable_to_assign, domain_value, non_assigned)
             if not empty_domain:
@@ -322,7 +312,7 @@ if __name__ == '__main__':
     print("Diccionari Variables: " + str(ordered_dict))
     print("Llista de variables: " + str(crossword_variables))
     print("Matriu col·lisió: " + str(collision_matrix))
-    word_dict = read_word_dictionary('diccionari_CB_v2.txt')
+    word_dict = read_word_dictionary('diccionari_CB_V2.txt')
     variable_domains = generate_individual_domains(crossword_variables, word_dict, ordered_dict)
 
     time1 = time.time()
