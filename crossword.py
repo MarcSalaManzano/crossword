@@ -244,7 +244,7 @@ def update_domains(restrictions, domain, actual_variable, domain_value, non_assi
     mask = np.isin(non_assigned[:], neighbours)
     for neighbour_non_assigned in non_assigned[mask]:
         collision = restrictions[actual_variable, neighbour_non_assigned]
-        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], start = collision[1]) == collision[1]]
+        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.char.find(new_domain[neighbour_non_assigned], domain_value[collision[0]], start = collision[1]) == collision[1]]
         if new_domain[neighbour_non_assigned].size == 0:
             return domain, True
     return new_domain, False
@@ -253,6 +253,7 @@ def update_domains(restrictions, domain, actual_variable, domain_value, non_assi
 def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
     if len(non_assigned) == 0:
         return assigned
+    print(variable_dict)
 
     variable_to_assign = non_assigned[0]
 
@@ -267,7 +268,7 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
             new_domain, empty_domain = update_domains(collision_matrix, domain, variable_to_assign, domain_value, non_assigned)
             if not empty_domain:
                 #print_board(assigned, variable_dict, 12, 12)
-                res = backtracking(assigned, new_non_assigned, restrictions, new_domain, variable_dict)
+                res = backtracking(assigned, new_non_assigned, restrictions, new_domain, variable_dict+1)
                 if res is not None:
                     return res
 
@@ -313,7 +314,7 @@ if __name__ == '__main__':
     print("temps setup " + str(time1-time0))
 
     variables = variable_degree_heuristic(crossword_variables, collision_matrix)
-    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), np.array(variables), collision_matrix, variable_domains, ordered_dict)
+    results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), np.array(variables), collision_matrix, variable_domains, 1)
     time2 = time.time()
     print("temps backtracking " + str(time2-time1))
 
