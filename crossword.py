@@ -82,7 +82,7 @@ def variable_horizontal_setup(line, crossword_row, num_variables, ordered_dict):
                 variables_in_row.append(variable_number - 1)
                 variable_number += 1
                 cell_counter = 0
-                crossword_column = actual_column
+                crossword_column = actual_column + 1
             else:
                 cell_counter = 0
                 crossword_column = actual_column + 1
@@ -129,7 +129,7 @@ def variable_vertical_setup(column, crossword_column, num_variables, ordered_dic
                 variables_in_columns.append(variable_number - 1)
                 variable_number += 1
                 cell_counter = 0
-                crossword_row = actual_row
+                crossword_row = actual_row + 1
             else:
                 cell_counter = 0
                 crossword_row = actual_row + 1
@@ -266,7 +266,8 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
 
             new_domain, empty_domain = update_domains(collision_matrix, domain, variable_to_assign, domain_value, non_assigned)
             if not empty_domain:
-                res = backtracking(assigned, new_non_assigned, restrictions, new_domain, ordered_dict)
+                #print_board(assigned, variable_dict, 12, 12)
+                res = backtracking(assigned, new_non_assigned, restrictions, new_domain, variable_dict)
                 if res is not None:
                     return res
 
@@ -277,6 +278,8 @@ def backtracking(assigned, non_assigned, restrictions, domain, variable_dict):
 def print_board(results, variables, crossword_row, crossword_column):
     board = np.full((crossword_row, crossword_column),'#')
     for result in results:
+        if result[0] is None:
+            continue
         starting_point = list(variables[result[1]][2])
         orientation = 2
         if variables[result[1]][1] == 0:
@@ -287,6 +290,7 @@ def print_board(results, variables, crossword_row, crossword_column):
             board[starting_point[0], starting_point[1]] = character
             starting_point[orientation] += 1
     print(str(board).replace('\'', '').replace('[', '').replace(']', '').replace(' ','').replace(',',''))
+    print("")
 
 
 def generate_individual_domains(variables, domain, variable_info):
@@ -300,9 +304,9 @@ def generate_individual_domains(variables, domain, variable_info):
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     time0 = time.time()
-    crossword_row, crossword_column, crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
+    crossword_row, crossword_column, crossword_variables, ordered_dict = read_crossword_file("crossword_A_v2.txt")
     collision_matrix = create_collision_matrix(crossword_variables, ordered_dict)
-    word_dict = read_word_dictionary('diccionari_CB_V2.txt')
+    word_dict = read_word_dictionary('diccionari_A.txt')
     variable_domains = generate_individual_domains(crossword_variables, word_dict, ordered_dict)
 
     time1 = time.time()
