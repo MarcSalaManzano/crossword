@@ -248,8 +248,7 @@ def update_domains(restrictions, domain, actual_variable, domain_value, non_assi
     for neighbour_non_assigned in non_assigned[mask]:
         collision = restrictions[actual_variable, neighbour_non_assigned]
         time0 = time.time()
-        mask = np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], collision[1], collision[1] + 1)
-        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.isin(mask, collision[1])]
+        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], start = collision[1]) == collision[1]]
         time1 = time.time()
         print("tiempo new dom " + str(time1 - time0))
         if new_domain[neighbour_non_assigned].size == 0:
@@ -308,12 +307,12 @@ def generate_individual_domains(variables, domain, variable_info):
 if __name__ == '__main__':
     # obtain the variables present in the crossword
     time0 = time.time()
-    crossword_row, crossword_column, crossword_variables, ordered_dict = read_crossword_file("crossword_A_v2.txt")
+    crossword_row, crossword_column, crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
     collision_matrix = create_collision_matrix(crossword_variables, ordered_dict)
     print("Diccionari Variables: " + str(ordered_dict))
     print("Llista de variables: " + str(crossword_variables))
     print("Matriu col·lisió: " + str(collision_matrix))
-    word_dict = read_word_dictionary('diccionari_A.txt')
+    word_dict = read_word_dictionary('diccionari_CB_V2.txt')
     variable_domains = generate_individual_domains(crossword_variables, word_dict, ordered_dict)
 
     time1 = time.time()
