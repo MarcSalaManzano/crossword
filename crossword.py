@@ -248,8 +248,7 @@ def update_domains(restrictions, domain, actual_variable, domain_value, non_assi
     for neighbour_non_assigned in non_assigned[mask]:
         collision = restrictions[actual_variable, neighbour_non_assigned]
         time0 = time.time()
-        mask = np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], collision[1], collision[1] + 1)
-        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.isin(mask, collision[1])]
+        new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], start = collision[1]) == collision[1]]
         time1 = time.time()
         print("tiempo new dom " + str(time1 - time0))
         if new_domain[neighbour_non_assigned].size == 0:
