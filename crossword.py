@@ -204,7 +204,6 @@ def variable_degree_heuristic(not_assigned_variables, collision_matrix):
         1) sorted_not_assigned_variables (list of list): contains the variables sorted by the greater number of
            constraints in which they are involved
     """
-    print("Not assigned variables " + str(not_assigned_variables))
     constraints_dict = {}
     sorted_not_assigned_variables = []
     for num_variable in not_assigned_variables:
@@ -213,10 +212,8 @@ def variable_degree_heuristic(not_assigned_variables, collision_matrix):
             if collision_value is not None:
                 constraints_number += 1
         constraints_dict[num_variable] = constraints_number
-        print("Variable num " + str(num_variable) + " té " + str(constraints_number) + " restriccions")
     sorted_dict = collections.OrderedDict(sorted(constraints_dict.items(), key=lambda x: x[1], reverse=True))
     sorted_not_assigned_variables.extend(sorted_dict.keys())
-    print("Sorted list of not assigned variables: " + str(sorted_not_assigned_variables))
     return sorted_not_assigned_variables
 
 
@@ -247,10 +244,7 @@ def update_domains(restrictions, domain, actual_variable, domain_value, non_assi
     mask = np.isin(non_assigned[:], neighbours)
     for neighbour_non_assigned in non_assigned[mask]:
         collision = restrictions[actual_variable, neighbour_non_assigned]
-        time0 = time.time()
         new_domain[neighbour_non_assigned] = new_domain[neighbour_non_assigned][np.char.rfind(new_domain[neighbour_non_assigned], domain_value[collision[0]], start = collision[1]) == collision[1]]
-        time1 = time.time()
-        print("tiempo new dom " + str(time1 - time0))
         if new_domain[neighbour_non_assigned].size == 0:
             return domain, True
     return new_domain, False
@@ -300,7 +294,6 @@ def generate_individual_domains(variables, domain, variable_info):
 
     for i in variables:
         variable_domains[i] = domain[variable_info[i][0]]
-    print(variable_domains)
     return variable_domains
 
 
@@ -309,18 +302,17 @@ if __name__ == '__main__':
     time0 = time.time()
     crossword_row, crossword_column, crossword_variables, ordered_dict = read_crossword_file("crossword_CB_v2.txt")
     collision_matrix = create_collision_matrix(crossword_variables, ordered_dict)
-    print("Diccionari Variables: " + str(ordered_dict))
-    print("Llista de variables: " + str(crossword_variables))
-    print("Matriu col·lisió: " + str(collision_matrix))
     word_dict = read_word_dictionary('diccionari_CB_V2.txt')
     variable_domains = generate_individual_domains(crossword_variables, word_dict, ordered_dict)
 
     time1 = time.time()
-    print("tiempo setup " + str(time1-time0))
+    print("temps setup " + str(time1-time0))
 
     variables = variable_degree_heuristic(crossword_variables, collision_matrix)
     results = backtracking(np.empty((crossword_variables.shape[0], 2), dtype=object), np.array(variables), collision_matrix, variable_domains, ordered_dict)
     time2 = time.time()
-    print("tiempo bt " + str(time2-time1))
+    print("temps backtracking " + str(time2-time1))
 
     print_board(results, ordered_dict, crossword_row, crossword_column)
+
+    print("temps total " + str(time2 - time0))
