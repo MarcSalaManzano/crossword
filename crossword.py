@@ -59,7 +59,6 @@ def variable_horizontal_setup(line, crossword_row, num_variables, ordered_dict):
                format: [ size, direction (0 = horizontal), start position (= row, column) ]
         Returns:
             1) variables_in_row (list): return a list with the number of variables that appear in a specific row
-
     """
     variables_in_row = []
     cell_counter = 0
